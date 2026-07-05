@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RCE Sandbox — Python Playground</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">⟨/⟩</span>
+      <span class="brand-name">RCE Sandbox</span>
+      <span class="lang-badge">Python 3</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="ws-status" class="ws-status disconnected" title="WebSocket status">● offline</span>
+      <button id="run-btn" class="btn btn-run" title="Run code (Ctrl+Enter)">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>
+        Run
+      </button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="editor-pane" id="editor-pane">
+      <div class="pane-header">
+        <span class="file-tab">main.py</span>
+      </div>
+      <div id="editor"></div>
+    </section>
+
+    <div class="divider" id="divider"></div>
+
+    <section class="output-pane" id="output-pane">
+      <div class="pane-header">
+        <span class="pane-title">Output</span>
+        <button id="clear-btn" class="btn btn-ghost" title="Clear output">Clear</button>
+      </div>
+      <div id="terminal" class="terminal">
+        <div id="terminal-output"></div>
+        <div id="terminal-input-row" class="terminal-input-row hidden">
+          <span class="prompt-arrow">›</span>
+          <input id="terminal-input" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="Type input and press Enter…" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- AI chat launcher -->
+  <button id="chat-fab" class="chat-fab" title="Ask AI about your code">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3z"/>
+      <path d="M19 15l.85 2.15L22 18l-2.15.85L19 21l-.85-2.15L16 18l2.15-.85L19 15z"/>
+    </svg>
+  </button>
+
+  <!-- AI chat panel -->
+  <div id="chat-panel" class="chat-panel hidden">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span class="chat-dot"></span>
+        AI Assistant
+      </div>
+      <div class="chat-header-actions">
+        <button id="chat-settings-btn" class="icon-btn" title="Set Gemini API key">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button id="chat-clear-btn" class="icon-btn" title="Clear chat history">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        </button>
+        <button id="chat-close-btn" class="icon-btn" title="Close">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="chat-messages" class="chat-messages">
+      <div class="chat-empty">
+        <p>👋 Ask me anything about your code!</p>
+        <p class="chat-empty-sub">Tick “include code” to send your editor content as context.</p>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <label class="include-code">
+        <input type="checkbox" id="include-code" checked />
+        include code
+      </label>
+      <div class="chat-input-row">
+        <textarea id="chat-input" rows="1" placeholder="Ask a question…"></textarea>
+        <button id="chat-send-btn" class="btn btn-send" title="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="chat.js"></script>
+</body>
+</html>
