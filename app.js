@@ -348,7 +348,7 @@ async function sendMessage() {
   );
 }
 
-async function prepareGeminiRequestPayload() {
+function prepareGeminiRequestPayload() {
   let systemText =
     "You are a friendly programming assistant embedded in an online Python playground. " +
     "Help the user understand, debug and improve their code. Be concise; use markdown " +
@@ -369,7 +369,7 @@ async function prepareGeminiRequestPayload() {
     })),
   };
 
-  return JSON.stringify(body);
+  return body;
 }
 
 function renderHistory() {
@@ -462,7 +462,7 @@ function connect() {
         const { stream, reply } = msg.data || {};
         if (stream == "error") {
           typingEl.remove();
-          addBubble(`Error: ${err.message}`, "error");
+          addBubble(`Error: ${reply}`, "error");
           chatHistory.pop();
           saveHistory();
         } else {
