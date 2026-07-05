@@ -12,6 +12,7 @@ let ws = null;
 let running = false;
 let chatHistory = JSON.parse(localStorage.getItem("chat_history") || "[]");
 let waiting = false;
+let typingEl;
 
 const chatFab = document.getElementById("chat-fab");
 const chatPanel = document.getElementById("chat-panel");
@@ -334,11 +335,11 @@ async function sendMessage() {
   saveHistory();
   addBubble(text, "user");
 
-  const typingEl = addBubble("thinking", "model typing");
+  typingEl = addBubble("thinking", "model typing");
   waiting = true;
   chatSendBtn.disabled = true;
 
-  const requestPayload = prepareGeminiRequestPayload(apiKey);
+  const requestPayload = prepareGeminiRequestPayload();
   ws.send(
     JSON.stringify({
       event: "chat",
